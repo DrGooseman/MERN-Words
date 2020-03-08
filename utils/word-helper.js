@@ -1,3 +1,5 @@
+const { Word } = require("../models/wordlist");
+
 function getWords(words, num) {
   let newArray = [];
   let count = 0;
@@ -26,4 +28,29 @@ function changeWordLevel(word, level) {
     word.nextDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 21);
 }
 
-exports.getWords;
+async function getExpandedWords(words)
+{
+	 const newWords = [];
+  const wordList = await Word.find();
+
+  words.forEach(word => {
+    const foundWord = wordList.find(lWord => lWord.number == word.number);
+
+    if (foundWord) {
+      newWords.push({
+        number: word.number,
+        level: word.level,
+        nextDate: word.nextDate,
+        word: foundWord.word,
+        definition: foundWord.definition
+      });
+      word.word = foundWord.word;
+      word.definition = foundWord.definition;
+    }
+  });
+  return newWords;
+}
+
+exports.getWords = getWords;
+exports.getExpandedWords = getExpandedWords;
+exports.changeWordLevel = changeWordLevel;

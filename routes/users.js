@@ -5,7 +5,7 @@ const { Word } = require("../models/wordlist");
 const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
-const { getWords } = require("../utils/word-helper");
+const { getWords, getExpandedWords } = require("../utils/word-helper");
 const jwt = require("jsonwebtoken");
 const _ = require("lodash");
 
@@ -84,6 +84,28 @@ router.post("/", async (req, res) => {
   // .send(_.pick(user, ["_id", "name", "email"]));
 });
 
+router.get("/words/info", auth, async (req, res) => {
+  const user = await User.findById(req.user._id);
+  
+  const wordInfo = {readyToLearn: 0, readyToReview: 0, learned: 0, mastered: 0, words: 0};
+  
+  user.words.forEach((word)=>{
+	 wordInfo.words++; 
+	 if (word.level === 4)
+		 wordInfo.mastered++;
+	 else if (word.level > 0)
+		 wordInfo.learned++;
+	 if (new Date(word.nextDate) < new Date()) 
+	 {
+		 if (word.level > 0)
+			 wordInfo.readyToReview++;
+		 else
+			 wordInfo.readyToLearn++;
+	 }
+  });
+  res.send({ wordInfo:  wordInfo});
+});
+
 router.get("/words/:numOfWords", auth, async (req, res) => {
   const user = await User.findById(req.user._id); //.select("-password");
   const words = getWords(user.words, req.params.numOfWords);
@@ -96,28 +118,11 @@ router.get("/words", auth, async (req, res) => {
   //   path: "words",
   //   model: "Word"
   // });
-  const newWords = [];
-  const wordList = await Word.find();
+ const expandedWords = await getExpandedWords(user.words);
 
-  user.words.forEach(word => {
-    const foundWord = wordList.find(lWord => lWord.number == word.number);
-
-    if (foundWord) {
-      newWords.push({
-        number: word.number,
-        level: word.level,
-        nextDate: word.nextDate,
-        word: foundWord.word,
-        definition: foundWord.definition
-      });
-      word.word = foundWord.word;
-      word.definition = foundWord.definition;
-    }
-  });
-
-  console.log(newWords[0]);
-  res.send({ words: newWords });
+  res.send({ words:  expandedWords});
 });
+
 
 router.patch("/words/word/:wordNum", async (req, res) => {
   const user = await User.findById(req.user._id);
