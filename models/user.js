@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    minlength: 5,
+    minlength: 3,
     maxlength: 50
   },
   email: {
@@ -42,7 +42,7 @@ const User = new mongoose.model("User", userSchema);
 function validateUser(user) {
   const schema = {
     name: Joi.string()
-      .min(5)
+      .min(3)
       .max(50)
       .required(),
     email: Joi.string()
@@ -59,5 +59,16 @@ function validateUser(user) {
   return Joi.validate(user, schema);
 }
 
+function populateWords() {
+  let words = [];
+  const date = new Date();
+  for (let i = 0; i < 1000; i++) {
+    words.push({ number: i, level: 0, nextDate: date });
+  }
+
+  return words;
+}
+
 exports.User = User;
 exports.validate = validateUser;
+exports.populateWords = populateWords;
