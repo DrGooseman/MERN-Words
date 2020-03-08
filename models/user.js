@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
   },
   words: [
     {
-      number: Number,
+      number: { type: Number, ref: "Word" },
       level: Number,
       nextDate: Date
     }

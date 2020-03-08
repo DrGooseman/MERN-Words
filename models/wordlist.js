@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const wordListSchema = new mongoose.Schema({
+const wordsSchema = new mongoose.Schema({
   word: {
     type: String,
     required: true
@@ -11,10 +11,11 @@ const wordListSchema = new mongoose.Schema({
   },
   number: {
     type: Number,
-    required: true
+    required: true,
+    ref: "User"
   }
 });
 
-const WordList = new mongoose.model("WordList", wordListSchema);
+const Word = new mongoose.model("Word", wordsSchema);
 
-exports.WordList = WordList;
+exports.Word = Word;
