@@ -5,7 +5,7 @@ const { Word } = require("../models/wordlist");
 const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
-const { getWords, getExpandedWords } = require("../utils/word-helper");
+const { getWords, getExpandedWords, getExpandedWordsLight, changeWordLevel } = require("../utils/word-helper");
 const jwt = require("jsonwebtoken");
 const _ = require("lodash");
 
@@ -35,16 +35,7 @@ router.post("/login", async (req, res) => {
   if (!isValidPassword)
     return res.status(403).send({ message: "Email or password is incorrect." });
 
-  let token;
-  try {
-    token = jwt.sign(
-      { _id: user._id, email: user.email },
-      process.env.JWT_PRIVATE_KEY,
-      { expiresIn: "1h" }
-    );
-  } catch (err) {
-    return res.status(500).send({ message: "Login failed, try again later." });
-  }
+ const token = user.generateAuthToken();
 
   res.json({
     _id: user._id,
@@ -108,8 +99,10 @@ router.get("/words/info", auth, async (req, res) => {
 
 router.get("/words/:numOfWords", auth, async (req, res) => {
   const user = await User.findById(req.user._id); //.select("-password");
-  const words = getWords(user.words, req.params.numOfWords);
-  res.send(words);
+  let words = getWords(user.words, Number(req.params.numOfWords));
+
+  words = await getExpandedWordsLight(words);
+  res.send({words});
 });
 
 router.get("/words", auth, async (req, res) => {
@@ -124,12 +117,13 @@ router.get("/words", auth, async (req, res) => {
 });
 
 
-router.patch("/words/word/:wordNum", async (req, res) => {
+router.patch("/words/word/:wordNum", auth, async (req, res) => {
   const user = await User.findById(req.user._id);
+  const level = req.body.level;
   const word = user.words[req.params.wordNum];
-  changeWordLevel(word);
+  changeWordLevel(word, level);
   await user.save();
-  res.send(word);
+  res.send({word});
 });
 
 module.exports = router;

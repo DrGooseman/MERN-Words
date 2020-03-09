@@ -5,16 +5,16 @@ function getWords(words, num) {
   let count = 0;
   const now = new Date();
 
-  words.forEach(word => {
-    if (word.nextDate < now) {
-      newArray.push(word);
+
+ for (let i = 0; i < words.length; i++){
+    if (new Date(words[i].nextDate) < now) {
+      newArray.push(words[i]);
       count++;
     }
-    if (count == num) return newArray;
-  });
-
-  return newArray;
-}
+    if (count > num) return newArray;
+ }
+  }
+ 
 function changeWordLevel(word, level) {
   word.level = level;
   if (level == 0) word.nextDate = new Date();
@@ -44,8 +44,26 @@ async function getExpandedWords(words)
         word: foundWord.word,
         definition: foundWord.definition
       });
-      word.word = foundWord.word;
-      word.definition = foundWord.definition;
+    }
+  });
+  return newWords;
+}
+
+async function getExpandedWordsLight(words)
+{
+	 const newWords = [];
+  const wordList = await Word.find();
+
+  words.forEach(word => {
+    const foundWord = wordList.find(lWord => lWord.number == word.number);
+
+    if (foundWord) {
+      newWords.push({
+        number: word.number,
+        level: word.level,
+        word: foundWord.word,
+        definition: foundWord.definition
+      });
     }
   });
   return newWords;
@@ -54,3 +72,4 @@ async function getExpandedWords(words)
 exports.getWords = getWords;
 exports.getExpandedWords = getExpandedWords;
 exports.changeWordLevel = changeWordLevel;
+exports.getExpandedWordsLight = getExpandedWordsLight;
