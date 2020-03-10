@@ -1,5 +1,5 @@
-const { Word } = require("../models/wordlist");
-const { wordsArray, translationsArray } = require("./word-list");
+//const { Word } = require("../models/wordlist");
+const { wordsArray,sentencesArray, translationsArray } = require("./word-list");
 
 function getWords(words, num) {
   let newArray = [];
@@ -30,7 +30,7 @@ function changeWordLevel(word, level) {
 
 async function getExpandedWords(words) {
   const newWords = [];
-  const wordList = await Word.find();
+  const wordList = wordsArray;//await Word.find();
 
   words.forEach(word => {
     const foundWord = wordList.find(lWord => lWord.number == word.number);
@@ -50,7 +50,7 @@ async function getExpandedWords(words) {
 
 async function getExpandedWordsLight(words) {
   const newWords = [];
-  const wordList = await Word.find();
+  const wordList = wordsArray;//await Word.find();
 
   words.forEach(word => {
     const foundWord = wordList.find(lWord => lWord.number == word.number);
@@ -71,10 +71,10 @@ async function getExpandedWordsLight(words) {
 }
 
 function findSentence(word) {
-  for (let i = 0; i < wordsArray.length; i++) {
-    if (wordsArray[i].search(new RegExp(` ${word}[ !.,]`,"i")) > -1)
+  for (let i = 0; i < sentencesArray.length; i++) {
+    if (sentencesArray[i].search(new RegExp(` ${word}[ !.,]`,"i")) > -1)
       return {
-        sentence: wordsArray[i],
+        sentence: sentencesArray[i],
         translatedSentence: translationsArray[i]
       };
   }
