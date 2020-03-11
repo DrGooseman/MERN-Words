@@ -5,7 +5,7 @@ const { Word } = require("../models/wordlist");
 const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
-const { getWords, getExpandedWords, changeWordLevel } = require("../utils/word-helper");
+const { getWords, getExpandedWords, changeWordLevel, getWordInfo } = require("../utils/word-helper");
 const jwt = require("jsonwebtoken");
 const _ = require("lodash");
 
@@ -122,8 +122,16 @@ router.get("/words", auth, async (req, res) => {
   res.send({ words:  expandedWords});
 });
 
+router.get("/words/info/:wordNum", auth, async (req, res) => {
+  const user = await User.findById(req.user._id);
+ 
+ const wordInfo = await getWordInfo(user.words,  Number(req.params.wordNum));
+ 
+  res.send({ word:  wordInfo});
+});
 
-router.patch("/words/word/:wordNum", auth, async (req, res) => {
+
+router.patch("/words/:wordNum", auth, async (req, res) => {
 	const wordNum = Number(req.params.wordNum);
   const user = await User.findById(req.user._id);
   const level = req.body.level;

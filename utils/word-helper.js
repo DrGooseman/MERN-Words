@@ -71,15 +71,29 @@ function getWords(words, num, category) {
   }
 }
 
+function getWordInfo(userWords, wordNum){
+	const userWord = userWords.find((word)=>word.number === wordNum);
+	const word = wordsArray.find((word)=>word.number === wordNum);
+	
+	return { 
+	number: word.number,
+	word: word.word,
+	definition: word.definition,
+	level: userWord.level,
+	nextDate: userWord.nextDate,
+	sentences: findAllSentences(word.word)
+	};
+}
+
 
 
 function changeWordLevel(word, level) {
   word.level = level;
   if (level == 0) word.nextDate = new Date();
   else if (level == 1)
-    word.nextDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 2);
+    word.nextDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 4);
   else if (level == 2)
-    word.nextDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 48);
+    word.nextDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 2);
   else if (level == 3)
     word.nextDate = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 7);
   else if (level == 4)
@@ -124,6 +138,19 @@ function findSentence(word) {
   return { sentence: undefined, translatedSentence: undefined };
 }
 
+function findAllSentences(word) {
+	const foundSentences = [];
+  for (let i = 0; i < sentencesArray.length; i++) {
+    if (sentencesArray[i].search(new RegExp(` ${word}[ !.,]`,"i")) > -1)
+      foundSentences.push( {
+        sentence: sentencesArray[i],
+        translatedSentence: translationsArray[i]
+      });
+  }
+  return foundSentences;
+}
+
 exports.getWords = getWords;
 exports.getExpandedWords = getExpandedWords;
 exports.changeWordLevel = changeWordLevel;
+exports.getWordInfo = getWordInfo;
