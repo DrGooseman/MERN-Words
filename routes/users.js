@@ -5,7 +5,7 @@ const { Word } = require("../models/wordlist");
 const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
-const { getWords, getExpandedWords, getExpandedWordsLight, changeWordLevel } = require("../utils/word-helper");
+const { getWords, getExpandedWords, changeWordLevel } = require("../utils/word-helper");
 const jwt = require("jsonwebtoken");
 const _ = require("lodash");
 
@@ -97,32 +97,51 @@ router.get("/words/info", auth, async (req, res) => {
   res.send({ wordInfo:  wordInfo});
 });
 
-router.get("/words/:numOfWords", auth, async (req, res) => {
+router.get("/words/:numOfWords&:category", auth, async (req, res) => {
   const user = await User.findById(req.user._id); //.select("-password");
-  let words = getWords(user.words, Number(req.params.numOfWords));
+  let words = getWords(user.words, Number(req.params.numOfWords), req.params.category);
 
-  words = await getExpandedWordsLight(words);
+  //words = await getExpandedWordsLight(words);
   res.send({words});
 });
 
 router.get("/words", auth, async (req, res) => {
   const user = await User.findById(req.user._id);
-  // .populate({
-  //   path: "words",
-  //   model: "Word"
-  // });
+  
+  const wordsAmount = user.words.length;
+ 
  const expandedWords = await getExpandedWords(user.words);
+ 
+ if (user.words.length > wordsAmount)
+ {
+	 try{
+  await user.save();
+	}catch(err){return res.status(500).send({ message: "Server error, could not update the user." });}
+ }
 
   res.send({ words:  expandedWords});
 });
 
 
 router.patch("/words/word/:wordNum", auth, async (req, res) => {
+	const wordNum = Number(req.params.wordNum);
   const user = await User.findById(req.user._id);
   const level = req.body.level;
-  const word = user.words[req.params.wordNum];
+  let word = user.words.find((word)=>word.number === wordNum)
+  
+  if (!word)
+  {
+	  word = {number: wordNum, level: 0, nextDate: new Date()};
+	    changeWordLevel(word, level);
+		user.words.push(word);
+  }
+  else
   changeWordLevel(word, level);
+	
+	try{
   await user.save();
+	}catch(err){return res.status(500).send({ message: "Server error, could not save the word." });}
+	
   res.send({word});
 });
 

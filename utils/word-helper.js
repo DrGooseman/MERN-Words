@@ -1,19 +1,77 @@
 //const { Word } = require("../models/wordlist");
-const { wordsArray,sentencesArray, translationsArray } = require("./word-list");
+const { wordsArray,sentencesArray, translationsArray, wordsTop1000Array, wordsFoodArray, wordsUsefulArray, wordsCurseArray } = require("./word-list");
 
-function getWords(words, num) {
+function getWords(words, num, category) {
   let newArray = [];
   let count = 0;
   const now = new Date();
+  let array = wordsTop1000Array;
+ 
+  if (category === "Food")
+	  array = wordsFoodArray;
+  else if (category === "Useful")
+	  array = wordsUsefulArray;
+  else if (category === "Curse")
+	  array = wordsCurseArray;
 
-  for (let i = 0; i < words.length; i++) {
-    if (new Date(words[i].nextDate) < now) {
-      newArray.push(words[i]);
+  
+  for (let i = 0; i < array.length; i++) {
+	  
+	  const wordNum = array[i].number;
+	  const userWord = words.find((word)=>word.number === wordNum);
+	  
+	  
+	  if (!userWord){
+		    const { sentence, translatedSentence } = findSentence(array[i].word);
+		   newArray.push({
+        number: wordNum,
+        level: 0,
+        word: array[i].word,
+        definition: array[i].definition,
+        sentence: sentence,
+		   translatedSentence: translatedSentence}
+      );
+			count++;
+	  }
+    else if (new Date(userWord.nextDate) < now) {
+		  const { sentence, translatedSentence } = findSentence(array[i].word);
+      newArray.push({
+        number: userWord.number,
+        level: userWord.level,
+        word: array[i].word,
+        definition: array[i].definition,
+        sentence: sentence,
+        translatedSentence: translatedSentence
+      });
+      count++;
+    }
+    if (count > num) return newArray;
+  }
+  
+  //Not enough words ready for review? Run again, but take any words (as long as they werent taken last time)
+  
+   for (let i = 0; i < array.length; i++) {
+	  
+	  const wordNum = array[i].number;
+	  const userWord = words.find((word)=>word.number === wordNum);
+	  
+	 if (userWord && !newArray.some((word)=> word.number === array[i].number)) {
+		  const { sentence, translatedSentence } = findSentence(array[i].word);
+      newArray.push({
+        number: userWord.number,
+        level: userWord.level,
+        word: array[i].word,
+        definition: array[i].definition,
+        sentence: sentence,
+        translatedSentence: translatedSentence
+      });
       count++;
     }
     if (count > num) return newArray;
   }
 }
+
+
 
 function changeWordLevel(word, level) {
   word.level = level;
@@ -31,42 +89,27 @@ function changeWordLevel(word, level) {
 async function getExpandedWords(words) {
   const newWords = [];
   const wordList = wordsArray;//await Word.find();
+  
+  wordList.forEach(word => {
+    let foundUserWord = words.find(uWord => uWord.number == word.number);
+	
+	if (!foundUserWord){
+		foundUserWord = {number: word.number, level: 0, nextDate: new Date()};
+		words.push(foundUserWord);
+	}
 
-  words.forEach(word => {
-    const foundWord = wordList.find(lWord => lWord.number == word.number);
 
-    if (foundWord) {
       newWords.push({
-        number: word.number,
-        level: word.level,
-        nextDate: word.nextDate,
-        word: foundWord.word,
-        definition: foundWord.definition
+        number: foundUserWord.number,
+        level: foundUserWord.level,
+        nextDate: foundUserWord.nextDate,
+        word: word.word,
+        definition: word.definition,
+		categories: word.categories
       });
-    }
+  
   });
-  return newWords;
-}
-
-async function getExpandedWordsLight(words) {
-  const newWords = [];
-  const wordList = wordsArray;//await Word.find();
-
-  words.forEach(word => {
-    const foundWord = wordList.find(lWord => lWord.number == word.number);
-
-    if (foundWord) {
-      const { sentence, translatedSentence } = findSentence(foundWord.word);
-      newWords.push({
-        number: word.number,
-        level: word.level,
-        word: foundWord.word,
-        definition: foundWord.definition,
-        sentence: sentence,
-        translatedSentence: translatedSentence
-      });
-    }
-  });
+  
   return newWords;
 }
 
@@ -84,4 +127,3 @@ function findSentence(word) {
 exports.getWords = getWords;
 exports.getExpandedWords = getExpandedWords;
 exports.changeWordLevel = changeWordLevel;
-exports.getExpandedWordsLight = getExpandedWordsLight;
