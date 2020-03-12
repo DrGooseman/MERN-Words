@@ -23,17 +23,29 @@ const userSchema = new mongoose.Schema({
     minlength: 5,
     maxlength: 1024
   },
-  words: [
-    {
-      number: { type: Number, ref: "Word" },
-      level: Number,
-      nextDate: Date
-    }
-  ]
+  allLangs: {
+    wordsDE: [
+      {
+        number: { type: Number, ref: "Word" },
+        level: Number,
+        nextDate: Date
+      }
+    ],
+    wordsRU: [
+      {
+        number: { type: Number, ref: "Word" },
+        level: Number,
+        nextDate: Date
+      }
+    ]
+  },
+  lang: { type: String, required: true }
 });
 
 userSchema.methods.generateAuthToken = function() {
-  const token = jwt.sign({ _id: this._id }, process.env.JWT_PRIVATE_KEY,  { expiresIn: "12h" });
+  const token = jwt.sign({ _id: this._id }, process.env.JWT_PRIVATE_KEY, {
+    expiresIn: "12h"
+  });
   return token;
 };
 
@@ -53,22 +65,12 @@ function validateUser(user) {
     password: Joi.string()
       .min(5)
       .max(255)
-      .required()
+      .required(),
+    lang: Joi.string().required()
   };
 
   return Joi.validate(user, schema);
 }
 
-function populateWords() {
-  let words = [];
-  const date = new Date();
-  for (let i = 0; i < 1000; i++) {
-    words.push({ number: i, level: 0, nextDate: date });
-  }
-
-  return words;
-}
-
 exports.User = User;
 exports.validate = validateUser;
-exports.populateWords = populateWords;
