@@ -10,8 +10,7 @@ const {
   changeWordLevel,
   getWordInfo,
   getPopulatedWordsNewUser,
-  populateNewWordsIfNeeded,
-  verifyHasLang
+  populateNewWordsIfNeeded
 } = require("../utils/word-helper");
 
 router.post("/login", async (req, res) => {
@@ -199,15 +198,23 @@ router.patch("/words/:wordNum", auth, async (req, res) => {
   const user = await User.findById(req.user._id);
   const lang = user.lang;
   const words = user.allLangs["words" + lang];
-  const level = req.body.level;
-
+  const level = req.body.level || 0;
+ const isFlagged = req.body.isFlagged || false;
+ 
   let word = words.find(word => word.number === wordNum);
 
   if (!word) {
-    word = { number: wordNum, level: 0, nextDate: new Date() };
+    word = { number: wordNum, level: 0, nextDate: new Date(), isFlagged:isFlagged };
+	if (level > 0)
     changeWordLevel(word, level);
     words.push(word);
-  } else changeWordLevel(word, level);
+  } else {
+	  if(req.body.level !== undefined)
+	  changeWordLevel(word, level);
+		 if(req.body.isFlagged !== undefined)
+	  word.isFlagged = req.body.isFlagged;
+
+  }
 
   try {
     await user.save();

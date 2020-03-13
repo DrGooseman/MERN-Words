@@ -26,7 +26,8 @@ function getWords(words, num, category, lang) {
         word: array[i].word,
         definition: array[i].definition,
         sentence: sentence,
-        translatedSentence: translatedSentence
+        translatedSentence: translatedSentence,
+		isFlagged: false
       });
       count++;
     } else if (new Date(userWord.nextDate) < now) {
@@ -40,7 +41,8 @@ function getWords(words, num, category, lang) {
         word: array[i].word,
         definition: array[i].definition,
         sentence: sentence,
-        translatedSentence: translatedSentence
+        translatedSentence: translatedSentence,
+		isFlagged: userWord.isFlagged  || false
       });
       count++;
     }
@@ -70,6 +72,7 @@ function getWords(words, num, category, lang) {
     }
     if (count > num) return newArray;
   }
+   return newArray;
 }
 
 function getWordInfo(userWords, wordNum, lang) {
@@ -82,7 +85,9 @@ function getWordInfo(userWords, wordNum, lang) {
     definition: word.definition,
     level: userWord.level,
     nextDate: userWord.nextDate,
-    sentences: findAllSentences(word.word, lang)
+    sentences: findAllSentences(word.word, lang),
+	isFlagged: userWord.isFlagged || false
+	
   };
 }
 
@@ -126,12 +131,17 @@ async function getExpandedWords(words, lang) {
 
 function findSentence(word, lang) {
   const {sentencesArray,translationsArray} = allLangs[lang];
-  for (let i = 0; i < sentencesArray.length; i++) {
+  let i = Math.floor(Math.random() * sentencesArray.length);
+ 
+  for ( let count = 0; count < sentencesArray.length; count++) {
     if (sentencesArray[i].search(new RegExp(` ${word}[ !.,]`, "i")) > -1)
       return {
         sentence: sentencesArray[i],
         translatedSentence: translationsArray[i]
       };
+	  i++;
+	  if (i == sentencesArray.length)
+i = 0;		  
   }
   return { sentence: undefined, translatedSentence: undefined };
 }

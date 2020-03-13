@@ -26,16 +26,18 @@ const userSchema = new mongoose.Schema({
   allLangs: {
     wordsDE: [
       {
-        number: { type: Number, ref: "Word" },
+        number: Number,
         level: Number,
-        nextDate: Date
+        nextDate: Date,
+		isFlagged: Boolean
       }
     ],
     wordsRU: [
       {
-        number: { type: Number, ref: "Word" },
+        number: Number,
         level: Number,
-        nextDate: Date
+        nextDate: Date,
+		isFlagged: Boolean
       }
     ]
   },
