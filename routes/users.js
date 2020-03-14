@@ -10,7 +10,8 @@ const {
   changeWordLevel,
   getWordInfo,
   getPopulatedWordsNewUser,
-  populateNewWordsIfNeeded
+  populateNewWordsIfNeeded, 
+  getDifficultWords
 } = require("../utils/word-helper");
 
 router.post("/login", async (req, res) => {
@@ -131,7 +132,8 @@ router.get("/words/info", auth, async (req, res) => {
     readyToReview: 0,
     learned: 0,
     mastered: 0,
-    words: 0
+    words: 0,
+	flaggedAsDifficult: 0
   };
 
   user.allLangs["words" + user.lang].forEach(word => {
@@ -142,6 +144,7 @@ router.get("/words/info", auth, async (req, res) => {
       if (word.level > 0) wordInfo.readyToReview++;
       else wordInfo.readyToLearn++;
     }
+	if (word.isFlagged) wordInfo.flaggedAsDifficult++;
   });
   res.send({ wordInfo: wordInfo });
 });
@@ -150,7 +153,15 @@ router.get("/words/:numOfWords&:category", auth, async (req, res) => {
   const user = await User.findById(req.user._id); //.select("-password");
   const lang = user.lang;
 
-  let words = getWords(
+  let words;
+  if (req.params.category === "Flagged")
+	 words = getDifficultWords(
+    user.allLangs["words" + lang],
+    Number(req.params.numOfWords),
+    lang
+  );
+  else
+words  = getWords(
     user.allLangs["words" + lang],
     Number(req.params.numOfWords),
     req.params.category,

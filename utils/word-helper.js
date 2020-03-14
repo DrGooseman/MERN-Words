@@ -75,6 +75,70 @@ function getWords(words, num, category, lang) {
    return newArray;
 }
 
+
+function getDifficultWords(words, num, lang) {
+  let newArray = [];
+  let count = 0;
+  const now = new Date();
+  let array = allLangs[lang].wordsTop1000Array;
+
+  for (let i = 0; i < words.length; i++) {
+	  const userWord = words[i];
+	  if (!userWord.isFlagged)
+		  continue;
+	  
+	  if (new Date(userWord.nextDate) < now)
+	  {
+		   const wordInArray = array.find(word => word.number === userWord.number);
+		   const { sentence, translatedSentence } = findSentence(
+        wordInArray.word,
+        lang
+      );
+      newArray.push({
+        number: userWord.number,
+        level: userWord.level,
+        word: wordInArray.word,
+        definition: wordInArray.definition,
+        sentence: sentence,
+        translatedSentence: translatedSentence,
+		isFlagged: userWord.isFlagged  || false
+      });
+      count++;
+    }
+    if (count > num) return newArray;
+	
+  }
+	  
+  //Not enough words ready for review? Run again, but take any words (as long as they werent taken last time)
+  
+   for (let i = 0; i < words.length; i++) {
+	  const userWord = words[i];
+	  if (!userWord.isFlagged)
+		  continue;
+	  
+	  if (!newArray.some(word => word.number === userWord.number))
+	  {
+		   const wordInArray = array.find(word => word.number === userWord.number);
+		   const { sentence, translatedSentence } = findSentence(
+        wordInArray.word,
+        lang
+      );
+      newArray.push({
+        number: userWord.number,
+        level: userWord.level,
+        word: wordInArray.word,
+        definition: wordInArray.definition,
+        sentence: sentence,
+        translatedSentence: translatedSentence,
+		isFlagged: userWord.isFlagged  || false
+      });
+      count++;
+    }
+    if (count > num) return newArray;
+  }
+     return newArray;
+}
+
 function getWordInfo(userWords, wordNum, lang) {
   const userWord = userWords.find(word => word.number === wordNum);
   const word = allLangs[lang].wordsArray.find(word => word.number === wordNum);
@@ -122,7 +186,8 @@ async function getExpandedWords(words, lang) {
       nextDate: foundUserWord.nextDate,
       word: word.word,
       definition: word.definition,
-      categories: word.categories
+      categories: word.categories,
+	  isFlagged: foundUserWord.isFlagged
     });
   });
 
@@ -163,7 +228,7 @@ function getPopulatedWordsNewUser(lang) {
   let words = [];
   const date = new Date();
   for (let i = 0; i < allLangs[lang].wordsArray.length; i++) {
-    words.push({ number: i, level: 0, nextDate: date });
+    words.push({ number: i+1, level: 0, nextDate: date });
   }
 
   return words;
@@ -198,3 +263,4 @@ exports.getWordInfo = getWordInfo;
 exports.populateNewWordsIfNeeded = populateNewWordsIfNeeded;
 exports.getPopulatedWordsNewUser = getPopulatedWordsNewUser;
 exports.verifyHasLang = verifyHasLang;
+exports.getDifficultWords = getDifficultWords;
